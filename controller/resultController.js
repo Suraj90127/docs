@@ -35,7 +35,7 @@ try {
         res.json({ message: "Result created" });
     }
 } catch (error) {
-    console.error("Error fetching result:", error);
+    // console.error("Error fetching result:", error);
     res.status(500).json({ message: "Server error" });  
 }
 }
@@ -69,7 +69,7 @@ try {
         res.json({ message: "Result created" });
     }
 } catch (error) {
-    console.error("Error fetching result:", error);
+    // console.error("Error fetching result:", error);
     res.status(500).json({ message: "Server error" });  
 }
 }
@@ -103,7 +103,7 @@ export const getFancyResultForBet = async (req, res) => {
             res.status(404).json({ message: "Result not found" });
         }   
     } catch (error) {
-        console.error("Error fetching result:", error);
+        // console.error("Error fetching result:", error);
         res.status(500).json({ message: "Server error" });  
     }
 }
@@ -135,7 +135,7 @@ export const getResultForBet = async (req, res) => {
             res.status(404).json({ message: "Result not found" });
         }   
     } catch (error) {
-        console.error("Error fetching result:", error);
+        // console.error("Error fetching result:", error);
         res.status(500).json({ message: "Server error" });  
     }
 }
