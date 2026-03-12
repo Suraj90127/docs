@@ -18,6 +18,7 @@
 import axios from "axios";
 
 // const API_BASE_URL = "http://localhost:8000/api";
+// const API_BASE_URL = "https://api-docs.space/api";
 const API_BASE_URL = "/api";
 
 export const api = axios.create({

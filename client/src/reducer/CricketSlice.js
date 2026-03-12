@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "./api";
-import AccessProviders from './../pages/AccessProviders';
-
 
 
 /* =====================
@@ -63,12 +61,15 @@ export const getCricketAccessProvider = createAsyncThunk(
 export const getCricketMatches = createAsyncThunk(
   "cricket/getMatches",
   async (params = {}, { rejectWithValue }) => {
+    // console.log("pp",params);
+    
     try {
       const { data } = await api.get("/cricket/game-data", { params });
       return data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch cricket matches"
+
+        err.response?.data?.message
       );
     }
   }

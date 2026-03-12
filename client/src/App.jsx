@@ -1,32 +1,9 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Layout from "./components/Layout/Layout";
-import PrivateRoute from "./components/PrivateRoute";
 
-
-/* =====================
-   LAZY LOADED PAGES
-===================== */
-const Login = lazy(() => import("./pages/Auth/Login"));
-const Register = lazy(() => import("./pages/Auth/Register"));
-const ForgotPassword = lazy(() => import("./pages/Auth/ForgotPassword"));
-
-const Home = lazy(() => import("./pages/Home/Home"));
-const Users = lazy(() => import("./pages/Home/Users"));
-const Providers = lazy(() => import("./pages/Home/Providers"));
-const Games = lazy(() => import("./pages/Home/Games"));
-const AllPages = lazy(() => import("./pages/AllPages"));
-const Recharge = lazy(() => import("./pages/Home/Recharge"));
-const RechargeHistory = lazy(() => import("./pages/Home/RechargeHistory"));
-const BetHistory = lazy(() => import("./pages/Home/BetHistory"));
-const Notifications = lazy(() => import("./pages/Home/Notifications"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
-const AccessProviders = lazy(() => import("./pages/AccessProviders"));
 const Docs = lazy(() => import("./pages/Doc"));
-const Cricket = lazy(() => import("./pages/Cricket"));
+
 
 
 

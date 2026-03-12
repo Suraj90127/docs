@@ -47,8 +47,8 @@ const app = express();
 
 app.use(
   cors({
-    // origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
-    origin: ["https://api-docs.space"],
+    origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "https://api-docs.space"],
+    // origin: ["https://api-docs.space"],
     credentials: true,
   })
 );

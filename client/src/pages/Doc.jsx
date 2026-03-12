@@ -32,9 +32,7 @@ import {
   Plus,
   Trophy
 } from "lucide-react";
-import Header from "../components/Layout/Header";
 import { useTheme } from "../contexts/ThemeContext";
-import {api} from "../reducer/api"
 import { useDispatch, useSelector } from 'react-redux';
 import { getCricketBettingData, getCricketMatches, getSoccerBettingData, getSoccerMatches, getTennisBettingData, getTennisMatches } from "../reducer/CricketSlice";
 import { getActiveProviders, getBetHistory, getGameDetails, getUserBalance, launchGame, setUserBalance } from "../reducer/zilliSlice";
@@ -247,7 +245,7 @@ const API_STRUCTURE = {
       ]
     }
   },
-  "Zilli API": {
+  "Online game API": {
     description: "Game provider integration for casino games",
     icon: "🎮",
     basePath: "/api",
@@ -867,7 +865,7 @@ const handleTestEndpoint = async () => {
         }
         break;
         
-      case "Zilli API":
+      case "Online game API":
         if (selectedEndpoint.name === "Get Game Details") {
           response = await dispatch(getGameDetails(params)).unwrap();
         } else if (selectedEndpoint.name === "Active Providers") {
@@ -999,7 +997,7 @@ const handleTestEndpoint = async () => {
               </div>
               <div>
                 <h1 className={`text-xl font-bold bg-gradient-to-r ${classes.gradient} bg-clip-text text-transparent`}>
-                  Zapcore API
+                   API Documentation
                 </h1>
                 <p className={`text-xs ${classes.textMuted}`}>v1.0.0</p>
               </div>
@@ -1194,7 +1192,7 @@ const handleTestEndpoint = async () => {
                   <Zap className="w-14 h-14 text-white" />
                 </div>
                 <h2 className={`text-5xl font-bold mb-4 bg-gradient-to-r ${classes.gradient} bg-clip-text text-transparent`}>
-                  Zapcore API Documentation
+                  API Documentation
                 </h2>
                 <p className={`${classes.textSecondary} mb-8 text-lg max-w-2xl mx-auto`}>
                   Integrate cricket, tennis, soccer data, casino games, and betting results with our powerful API. 
