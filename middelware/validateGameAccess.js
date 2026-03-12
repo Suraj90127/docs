@@ -97,7 +97,7 @@ export const validateGameAccess = async (req, res, next) => {
         ================================ */
         const requestIp = getClientIp(req);
 
-        console.log("requestIp",requestIp);
+        console.log("requestIp11",requestIp);
         
   
         if (!user.ipv4_address) {
@@ -229,7 +229,7 @@ export const lunchGameValidate = async (req, res, next) => {
     ================================ */
     const requestIp = getClientIp(req);
 
-    // console.log("requestIp",requestIp);
+    console.log("requestIp22",requestIp);
     
 
     if (!validateIp(user.ipv4_address, requestIp)) {
@@ -259,7 +259,7 @@ export const lunchGameValidate = async (req, res, next) => {
 
 export const cricketGameValidate = async (req, res, next) => {
   
-  // console.log("key",req.query);
+  console.log("key",req.query);
   try {
     const { key } = req.query;
     /* ===============================
@@ -329,6 +329,9 @@ export const cricketGameValidate = async (req, res, next) => {
        3️⃣ IP VALIDATION
     ================================ */
     const requestIp = getClientIp(req);
+
+    console.log("requestIp33",requestIp);
+    
     
 
     if (!user.ipv4_address) {
