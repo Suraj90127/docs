@@ -14,6 +14,7 @@ import cricketRoutes from "./routes/cricketRoutes.js";
 import { Server } from "socket.io";
 import cricketGameRoute from './routes/cricketGameRoute.js';
 import gameLaunchRoute from './routes/GameLaunchRoute.js';
+import { cronJobGame1p } from './controller/cron.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +22,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 connectDB();
+cronJobGame1p()
 
 const PORT = process.env.PORT || 8000;
 

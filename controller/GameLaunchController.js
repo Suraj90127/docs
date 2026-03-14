@@ -11,7 +11,9 @@ import RawGameTransaction from "../models/RawGameTransaction.js";
 import GameTransaction from "../models/GameTransaction.js";
 import GGRLog from "../models/GGRLog.js";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import moment from "moment";
+// import moment from "moment";
+import { log } from "console";
+import moment from "moment-timezone";
 // import BalanceTransferLog from "../models/BalanceTransferLog.js";
 
 
@@ -142,12 +144,10 @@ export const getActiveProviders = async (req, res) => {
 
 
 export const getLaunchUrlSeamless = async (req, res) => {
+  
   const session = await mongoose.startSession();
   session.startTransaction();
   const { uid, key, playerid, opening_balance } = req.body;
-
-  // console.log("session",session);
-  console.log("req.body",req.body);
   
 
   try {
@@ -171,21 +171,21 @@ export const getLaunchUrlSeamless = async (req, res) => {
     const currency_code = "INR";
     const timestamp = Date.now().toString();
     const language = "en";
-    const home_url = "https://yourwebsite.com/";
+    const home_url = "https://api-docs.space/";
     const platform = "web";
-    const callback_url = "https://zapcore.live/api/huidu-seamless";
+    const callback_url = "https://api-docs.space/api/huidu/seamless-callback";
 
     const proxy = {
-      host: "64.79.234.241",
-      port: 6765,
+      host: "31.58.16.70",
+      port: 6037,
       auth: {
-        username: "dgwkmaqa",
-        password: "05xvlisyqip7",
+        username: "trqjnemy",
+        password: "34pw1x8rcxr3",
       },
     };
 
     const proxyAgent = new HttpsProxyAgent(
-  "http://dgwkmaqa:05xvlisyqip7@64.79.234.241:6765"
+  "http://trqjnemy:34pw1x8rcxr3@31.58.16.70:6037"
 );
 
     /* ================= USER ================= */
@@ -193,26 +193,44 @@ export const getLaunchUrlSeamless = async (req, res) => {
     if (!user) throw new Error("User not found");
     if (user.isActive !== 1) throw new Error("User is not active");
 
+    // console.log("user",user);
+    
+
     /* ================= GAME ================= */
     const game = await GameList.findOne({ game_uid: uid });
     if (!game) throw new Error("Game not found for this UID");
 
-    /* ================= PROVIDER ACCESS ================= */
+  
+
     const providerAccess = await UserProviderAccess.findOne({
-      userId: user._id,
-      "providers.name": game.provider,
-      "providers.status": 1,
+    userId: user._id,
+    providers: {
+      $elemMatch: {
+        status: 1,
+        $or: [
+          { name: { $regex: `^${game.provider}$`, $options: "i" } },
+          { path: { $regex: `^${game.provider}$`, $options: "i" } }
+        ]
+      }
+     }
     });
+
+
     if (!providerAccess)
-      throw new Error("User does not have access to this game provider");
+      throw new Error(`User does not have access to this game provider ${game.provider}`);
 
     /* ================= IP VALIDATION ================= */
     const requestIp =
       req.headers["x-forwarded-for"]?.split(",")[0] ||
       req.socket.remoteAddress;
 
-    const allowedIpv4 =
-      user.ipv4_address?.split(",").map(ip => ip.trim()) || [];
+      // console.log("requestIp",requestIp);
+      
+
+    // const allowedIpv4 =
+    //   user.ipv4_address?.split(",").map(ip => ip.trim()) || [];
+
+    const allowedIpv4 = (user.ipv4_address || []).map(ip => ip.trim());
 
     if (allowedIpv4.length && !allowedIpv4.includes(requestIp)) {
       throw new Error("Unauthorized request origin");
@@ -335,7 +353,7 @@ export const getLaunchUrlSeamless = async (req, res) => {
 
     let response = await launchGame(activeUsername, subuser.balance);
 
-    console.log("response",response);
+    // console.log("response",response);
     
 
     /* ---------- SUCCESS ---------- */
@@ -451,170 +469,6 @@ export const getLaunchUrlSeamless = async (req, res) => {
 };
 
 
-/* ================= CALLBACK CONTROLLER ================= */
-// export const handleSeamlessCallback = async (req, res) => {
-//   try {
-//     const aes_key = Buffer.from(
-//       "ca51aaabb5e8725f29cd42aa29623b48",
-//       "utf8"
-//     );
-//     const currency_code = "INR";
-
-//     const encryptedPayload = req.body.payload;
-
-//     if (!encryptedPayload) {
-//       return res.json({ code: 1, msg: "Payload missing" });
-//     }
-
-//     /* ---------- DECRYPT ---------- */
-//     const decrypted = aesDecrypt(encryptedPayload, aes_key);
-//     const data = JSON.parse(decrypted);
-
-//     if (!data) {
-//       return res.json({ code: 1, msg: "Payload decrypt or decode error" });
-//     }
-
-//     const {
-//       serial_number,
-//       member_account,
-//       game_uid,
-//       game_round,
-//       bet_amount = 0,
-//       win_amount = 0,
-//     } = data;
-
-//     if (!serial_number || !member_account || !game_uid) {
-//       return res.json({ code: 0, msg: "OK, no action (missing fields)" });
-      
-//     }
-
-//     const alreadyExists = await RawGameTransaction.exists({ serial_number });
-
-//     if (!alreadyExists) {
-//       await RawGameTransaction.create({
-//         serial_number,
-//         raw_data: data,
-//       });
-//     }
-
-//     /* ================= RAW TRANSACTION LOG ================= */
-//     // await RawGameTransaction.updateOne(
-//     //   { serial_number },
-//     //   {
-//     //     serial_number,
-//     //     raw_data: data,
-//     //   },
-//     //   { upsert: true }
-//     // );
-
-//     /* ================= PREFIX PARSING ================= */
-//     let prefix = null;
-//     let prefixMember = null;
-
-//     if (member_account.length >= 9) {
-//       const firstNine = member_account.substring(0, 9);
-//       prefix = firstNine.substring(6);
-//       prefixMember = member_account.substring(9);
-//     }
-
-//     /* ================= PREFIX USER ================= */
-//     const prefixUser = await User.findOne({ prefix });
-
-//     if (!prefixUser || prefixUser.balance <= 0) {
-//       const payload = aesEncrypt(
-//         JSON.stringify({
-//           credit_amount: "0.00",
-//           timestamp: Date.now().toString(),
-//         }),
-//         aes_key
-//       );
-//       return res.json({
-//         code: 2,
-//         msg: "Low balance (prefix user)",
-//         payload,
-//       });
-//     }
-
-//     /* ================= DAILY CHECK ================= */
-//     const dailyPrefixes = ["p02"];
-//     const isdaily = dailyPrefixes.includes(prefix) ? 1 : 0;
-
-//     /* ================= GAME TRANSACTION ================= */
-//     if (bet_amount > 0) {
-//       await GameTransaction.create({
-//         player_id: member_account,
-//         prefix,
-//         player: prefixMember,
-//         game_uid,
-//         game_round,
-//         serial_number,
-//         bet_amount,
-//         win_amount,
-//         status: win_amount > 0 ? 1 : 0,
-//         isdaily,
-//         currency_code,
-//         callback_time: new Date(),
-//       });
-//     } 
-//     else if (bet_amount < 0) {
-//       await GameTransaction.updateOne(
-//         { player_id: member_account, game_round },
-//         {
-//           serial_number,
-//           status: 3,
-//           callback_time: new Date(),
-//         }
-//       );
-//     } 
-//     else {
-//       const record = await GameTransaction.findOne({
-//         player_id: member_account,
-//         game_round,
-//       });
-
-//       if (record) {
-//         const status = win_amount > 0 ? 1 : 2;
-//         record.win_amount = win_amount;
-//         record.status = status;
-//         record.serial_number = serial_number;
-//         record.callback_time = new Date();
-//         await record.save();
-//       }
-//     }
-
-//     /* ================= SUBUSER BALANCE ================= */
-//     let newBalance = 0;
-//     const subuser = await SubUser.findOne({ username: member_account });
-
-//     if (subuser) {
-//       subuser.balance = subuser.balance - bet_amount + win_amount;
-//       newBalance = subuser.balance;
-//       await subuser.save();
-//     }
-
-//     /* ================= RESPONSE ================= */
-//     const responsePayload = aesEncrypt(
-//       JSON.stringify({
-//         credit_amount: newBalance.toFixed(2),
-//         timestamp: Date.now().toString(),
-//       }),
-//       aes_key
-//     );
-
-//     return res.json({
-//       code: 0,
-//       msg: "",
-//       payload: responsePayload,
-//     });
-
-//   } catch (error) {
-//     console.error("Callback error:", error);
-//     return res.json({ code: 1, msg: "Server error" });
-//   }
-// };
-
-// check subuser balance
-
 
 export const getUserBalanceLocal = async (req, res) => {
   try {
@@ -643,7 +497,7 @@ export const getUserBalanceLocal = async (req, res) => {
       req.socket.remoteAddress;
 
     const allowedIpv4 =
-      user.ipv4_address?.split(",").map(ip => ip.trim()) || [];
+      (user.ipv4_address || []).map(ip => ip.trim());
     const allowedIpv6 =
       user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
 
@@ -747,7 +601,7 @@ export const setUserBalanceLocal = async (req, res) => {
       req.socket.remoteAddress;
 
     const allowedIpv4 =
-      user.ipv4_address?.split(",").map(ip => ip.trim()) || [];
+      (user.ipv4_address || []).map(ip => ip.trim());
     const allowedIpv6 =
       user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
 
@@ -954,8 +808,6 @@ export const getBetHistory = async (req, res) => {
   }
 };
 
-
-
 // controllers/seamlessCallbackController.js
 
 export const handleSeamlessCallback = async (req, res) => {
@@ -971,7 +823,7 @@ export const handleSeamlessCallback = async (req, res) => {
     /* ================= PAYLOAD ================= */
     const encryptedPayload = req.body.payload;
 
-    // console.log("encryptedPayload",encryptedPayload);
+    // console.log("encryptedPayload callbacke",encryptedPayload);
     
     if (!encryptedPayload) {
       return res.json({ code: 1, msg: "Payload missing" });
@@ -979,7 +831,7 @@ export const handleSeamlessCallback = async (req, res) => {
 
     const decrypted = aesDecrypt(encryptedPayload, aes_key);
 
-    // console.log("decrypted",decrypted);
+    console.log("decrypted callback",decrypted);
     
     const data = JSON.parse(decrypted || "{}");
 
@@ -1038,6 +890,9 @@ export const handleSeamlessCallback = async (req, res) => {
         aes_key
       );
 
+      console.log("prefixUser",prefixUser);
+      
+
       return res.json({
         code: 2,
         msg: prefixUser ? "Low balance (prefix user)" : "Prefix user not found",
@@ -1051,6 +906,7 @@ export const handleSeamlessCallback = async (req, res) => {
 
     /* ================= GAME TRANSACTIONS ================= */
     if (bet_amount > 0) {
+      
       await GameTransaction.create({
         player_id,
         prefix,
@@ -1081,6 +937,8 @@ export const handleSeamlessCallback = async (req, res) => {
       });
 
       if (record) {
+        console.log("record",record);
+        
         const status = win_amount > 0 ? 1 : 2;
 
         await GameTransaction.updateOne(
@@ -1216,11 +1074,150 @@ export const processSingleGGR = async (
 
 
 
-export const handleBetLossGGR = async (req, res) => {
-  console.log("ssss");
+// export const handleBetLossGGR = async (req = null, res = null) => {
+//   console.log("ssss");
   
+//   try {
+//     /* ================= TIME SETUP ================= */
+//    const lessTime = moment()
+//     .tz("Asia/Kolkata")
+//     .subtract(3, "minutes")
+//     .toDate();
+
+//   const todayDate = moment()
+//     .tz("Asia/Kolkata")
+//     .format("YYYY-MM-DD");
+
+//     /* ================= AGGREGATE LOSS ================= */
+//     const ggrData = await GameTransaction.aggregate([
+//       {
+//         $match: {
+//           status: { $in: [0, 2] },
+//           ggrstatus: 0,
+//           isdaily: 0,
+//           callback_time: { $lt: lessTime },
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$prefix",
+//           total_loss_bets: { $sum: "$bet_amount" },
+//         },
+//       },
+//       {
+//         $project: {
+//           prefix: "$_id",
+//           total_loss_bets: 1,
+//           ggr_12_percent: {
+//             $round: [{ $multiply: ["$total_loss_bets", 0.12] }, 2],
+//           },
+//         },
+//       },
+//     ]);
+
+//     /* ================= PROCESS EACH PREFIX ================= */
+//     for (const row of ggrData) {
+//       const prefix = row.prefix;
+//       let ggrAmount = row.ggr_12_percent;
+//       const totalLoss = row.total_loss_bets;
+
+//       // v02 → 10%
+//       if (prefix === "v02") {
+//         ggrAmount = Number((totalLoss * 0.1).toFixed(2));
+//       }
+
+//       if (ggrAmount <= 0) continue;
+
+//       const user = await User.findOne({ prefix });
+//       if (!user) continue;
+
+//       const balanceBefore = user.balance || 0;
+//       const duepayBefore = user.duepay || 0;
+
+//       const actualDeduction = Math.min(ggrAmount, balanceBefore);
+//       const remainingDue = Math.max(ggrAmount - actualDeduction, 0);
+
+//       const balanceAfter = balanceBefore - actualDeduction;
+
+//       if (actualDeduction <= 0 && remainingDue <= 0) continue;
+
+//       /* ================= UPDATE TODAY GGR ================= */
+//       const userGgrDate = user.ggrupdatedate
+//         ? moment(user.ggrupdatedate).format("YYYY-MM-DD")
+//         : null;
+
+//       if (userGgrDate !== todayDate) {
+//         user.todayggr = actualDeduction;
+//         user.ggrupdatedate = todayDate;
+//       } else {
+//         user.todayggr = (user.todayggr || 0) + actualDeduction;
+//       }
+
+//       /* ================= UPDATE USER BALANCE ================= */
+//       user.balance = Math.max(balanceAfter, 0);
+//       user.totalggr = (user.totalggr || 0) + actualDeduction;
+//       user.duepay = duepayBefore + remainingDue;
+
+//       await user.save();
+
+//       /* ================= GGR LOG ================= */
+//       await GGRLog.create({
+//         prefix,
+//         total_bets: totalLoss,
+//         total_wins: 0,
+//         total_loss: totalLoss,
+//         ggr: totalLoss,
+//         ggr_12_percent: ggrAmount,
+//         balance_deducted: actualDeduction,
+//         user_balance_before: balanceBefore,
+//         user_balance_after: balanceAfter,
+//         ggr_date: todayDate,
+//         duepay_added: remainingDue,
+//       });
+//     }
+
+//     /* ================= MARK TRANSACTIONS PROCESSED ================= */
+//     await GameTransaction.updateMany(
+//       {
+//         status: { $in: [0, 2] },
+//         ggrstatus: 0,
+//         isdaily: 0,
+//       },
+//       { $set: { ggrstatus: 1 } }
+//     );
+
+//   if (res) {
+//     return res.json({
+//       status: true,
+//       message: "Loss GGR processed and user balances updated.",
+//       details: ggrData,
+//     });
+// }
+
+//   } catch (error) {
+//     console.error("Loss GGR Error:", error);
+//     return res.status(500).json({
+//     status: false,
+//     message: "Server error",
+//   });
+//   }
+// };
+
+
+// handleBetLossGGR()
+
+// get bet history by fillter
+
+
+
+export const handleBetLossGGR = async (req = null, res = null) => {
+
+  console.log("Running Loss GGR cron");
+
   try {
+
     /* ================= TIME SETUP ================= */
+
     const lessTime = moment()
       .tz("Asia/Kolkata")
       .subtract(3, "minutes")
@@ -1230,51 +1227,60 @@ export const handleBetLossGGR = async (req, res) => {
       .tz("Asia/Kolkata")
       .format("YYYY-MM-DD");
 
+
     /* ================= AGGREGATE LOSS ================= */
+
     const ggrData = await GameTransaction.aggregate([
       {
         $match: {
           status: { $in: [0, 2] },
           ggrstatus: 0,
           isdaily: 0,
-          callback_time: { $lt: lessTime },
-        },
+          callback_time: { $lt: lessTime }
+        }
       },
       {
         $group: {
           _id: "$prefix",
-          total_loss_bets: { $sum: "$bet_amount" },
-        },
+          total_loss_bets: { $sum: "$bet_amount" }
+        }
       },
       {
         $project: {
           prefix: "$_id",
           total_loss_bets: 1,
           ggr_12_percent: {
-            $round: [{ $multiply: ["$total_loss_bets", 0.12] }, 2],
-          },
-        },
-      },
+            $round: [{ $multiply: ["$total_loss_bets", 0.12] }, 2]
+          }
+        }
+      }
     ]);
 
-    /* ================= PROCESS EACH PREFIX ================= */
+
+    /* ================= PROCESS PREFIX ================= */
+
     for (const row of ggrData) {
+
       const prefix = row.prefix;
-      let ggrAmount = row.ggr_12_percent;
       const totalLoss = row.total_loss_bets;
 
-      // v02 → 10%
+      let ggrAmount = row.ggr_12_percent;
+
       if (prefix === "v02") {
-        ggrAmount = Number((totalLoss * 0.1).toFixed(2));
+        ggrAmount = Number((totalLoss * 0.10).toFixed(2));
       }
 
       if (ggrAmount <= 0) continue;
 
+
       const user = await User.findOne({ prefix });
+
       if (!user) continue;
 
-      const balanceBefore = user.balance || 0;
-      const duepayBefore = user.duepay || 0;
+
+      const balanceBefore = Number(user.balance || 0);
+      const duepayBefore = Number(user.duepay || 0);
+
 
       const actualDeduction = Math.min(ggrAmount, balanceBefore);
       const remainingDue = Math.max(ggrAmount - actualDeduction, 0);
@@ -1283,28 +1289,38 @@ export const handleBetLossGGR = async (req, res) => {
 
       if (actualDeduction <= 0 && remainingDue <= 0) continue;
 
-      /* ================= UPDATE TODAY GGR ================= */
+
+      /* ================= TODAY GGR ================= */
+
       const userGgrDate = user.ggrupdatedate
         ? moment(user.ggrupdatedate).format("YYYY-MM-DD")
         : null;
 
       if (userGgrDate !== todayDate) {
+
         user.todayggr = actualDeduction;
         user.ggrupdatedate = todayDate;
+
       } else {
-        user.todayggr = (user.todayggr || 0) + actualDeduction;
+
+        user.todayggr = Number(user.todayggr || 0) + actualDeduction;
+
       }
 
-      /* ================= UPDATE USER BALANCE ================= */
+
+      /* ================= USER UPDATE ================= */
+
       user.balance = Math.max(balanceAfter, 0);
-      user.totalggr = (user.totalggr || 0) + actualDeduction;
+      user.totalggr = Number(user.totalggr || 0) + actualDeduction;
       user.duepay = duepayBefore + remainingDue;
 
       await user.save();
 
+
       /* ================= GGR LOG ================= */
+
       await GGRLog.create({
-        prefix,
+        prefix: prefix,
         total_bets: totalLoss,
         total_wins: 0,
         total_loss: totalLoss,
@@ -1314,37 +1330,54 @@ export const handleBetLossGGR = async (req, res) => {
         user_balance_before: balanceBefore,
         user_balance_after: balanceAfter,
         ggr_date: todayDate,
-        duepay_added: remainingDue,
+        duepay_added: remainingDue
       });
+
     }
 
+
     /* ================= MARK TRANSACTIONS PROCESSED ================= */
+
     await GameTransaction.updateMany(
       {
         status: { $in: [0, 2] },
         ggrstatus: 0,
         isdaily: 0,
+        callback_time: { $lt: lessTime }
       },
-      { $set: { ggrstatus: 1 } }
+      {
+        $set: { ggrstatus: 1 }
+      }
     );
 
-    return res.json({
-      status: true,
-      message: "Loss GGR processed and user balances updated.",
-      details: ggrData,
-    });
+
+    if (res) {
+
+      return res.json({
+        status: true,
+        message: "Loss GGR processed and user balances updated.",
+        details: ggrData
+      });
+
+    }
 
   } catch (error) {
+
     console.error("Loss GGR Error:", error);
-    return res.status(500).json({
-      status: false,
-      message: "Server error",
-    });
+
+    if (res) {
+
+      return res.status(500).json({
+        status: false,
+        message: "Server error"
+      });
+
+    }
+
   }
+
 };
 
-
-// get bet history by fillter
 export const getBetHistoryFilter = async (req, res) => {
   try {
     /* ================= VALIDATION ================= */
@@ -1523,8 +1556,7 @@ export const setBalance = async (req, res) => {
       req.headers["x-forwarded-for"]?.split(",")[0] ||
       req.socket.remoteAddress;
 
-    const allowedIpv4 =
-      user.ipv4_address?.split(",").map(ip => ip.trim()) || [];
+    const allowedIpv4 =(user.ipv4_address || []).map(ip => ip.trim());
     const allowedIpv6 =
       user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
 

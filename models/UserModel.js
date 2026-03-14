@@ -63,8 +63,9 @@ const userSchema = new mongoose.Schema(
             type:String,
             unique:true
         },
-        duepay:{
-            type:String,
+       duepay:{
+        type:Number,
+        default:0
         },
         user_ggr:{
             type:Number

@@ -293,9 +293,10 @@ const API_STRUCTURE = {
           auth: "lunchGameValidate",
           apiKey: API_CONFIG.zilliKey,
           params: [
-            { name: "key", type: "string", required: true, description: "Your API key", location: "query" }
+            // { name: "key", type: "string", required: true, description: "Your API key", location: "query" }
           ],
           body: [
+            { name: "key", type: "string", required: true, description: "Your API key", location: "query" },
             { name: "uid", type: "string", required: true, description: "Game UID", location: "body" },
             { name: "playerid", type: "string", required: true, description: "Player ID (unique identifier for the player)", location: "body" },
             { name: "opening_balance", type: "number", required: true, description: "Initial balance to credit to player", location: "body" }
