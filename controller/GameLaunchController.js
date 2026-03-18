@@ -714,9 +714,16 @@ export const setUserBalanceLocal = async (req, res) => {
 
 // get bet hitory 
 export const getBetHistory = async (req, res) => {
+  // console.log("req.body",req.body);
+  
   try {
     /* ================= VALIDATION ================= */
     const { key, playerid, page = 1, limit = 20, from_date, to_date } = req.body;
+
+    const cleanPlayerId = String(playerid).slice(-7);
+
+    // console.log("cleanPlayerId",cleanPlayerId);
+    
 
     if (!key) {
       return res.status(422).json({
@@ -744,7 +751,7 @@ export const getBetHistory = async (req, res) => {
     };
 
     if (playerid) {
-      query.player = playerid;
+      query.player = cleanPlayerId;
     }
 
     if (from_date || to_date) {
@@ -788,6 +795,9 @@ export const getBetHistory = async (req, res) => {
       provider: gameMap[r.game_uid]?.provider || null,
       icon: gameMap[r.game_uid]?.icon || null,
     }));
+
+    // console.log("finalData",finalData);
+    
 
     /* ================= RESPONSE ================= */
     return res.json({
@@ -834,7 +844,7 @@ export const handleSeamlessCallback = async (req, res) => {
 
     const decrypted = aesDecrypt(encryptedPayload, aes_key);
 
-    console.log("decrypted callback",decrypted);
+    // console.log("decrypted callback",decrypted);
     
     const data = JSON.parse(decrypted || "{}");
 
