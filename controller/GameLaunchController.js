@@ -1011,7 +1011,7 @@ export const processSingleGGR = async (
 
   // 12% default
   // ggrAmount = 20*0.12 = 2.4
-  let ggrAmount = Number((ggr * 0.12).toFixed(2));
+ 
 
   // special prefix logic
   // if (prefix === "v02") {
@@ -1025,6 +1025,8 @@ export const processSingleGGR = async (
     })
     
   } 
+
+   let ggrAmount = Number((ggr * user.ggr_coust).toFixed(2));
 
   const balanceBefore = Number(user.balance || 0); // 100
   const duepayBefore = Number(user.duepay || 0); // 90
@@ -1074,145 +1076,8 @@ export const processSingleGGR = async (
 
 
 
-// export const handleBetLossGGR = async (req = null, res = null) => {
-//   console.log("ssss");
-  
-//   try {
-//     /* ================= TIME SETUP ================= */
-//    const lessTime = moment()
-//     .tz("Asia/Kolkata")
-//     .subtract(3, "minutes")
-//     .toDate();
-
-//   const todayDate = moment()
-//     .tz("Asia/Kolkata")
-//     .format("YYYY-MM-DD");
-
-//     /* ================= AGGREGATE LOSS ================= */
-//     const ggrData = await GameTransaction.aggregate([
-//       {
-//         $match: {
-//           status: { $in: [0, 2] },
-//           ggrstatus: 0,
-//           isdaily: 0,
-//           callback_time: { $lt: lessTime },
-//         },
-//       },
-//       {
-//         $group: {
-//           _id: "$prefix",
-//           total_loss_bets: { $sum: "$bet_amount" },
-//         },
-//       },
-//       {
-//         $project: {
-//           prefix: "$_id",
-//           total_loss_bets: 1,
-//           ggr_12_percent: {
-//             $round: [{ $multiply: ["$total_loss_bets", 0.12] }, 2],
-//           },
-//         },
-//       },
-//     ]);
-
-//     /* ================= PROCESS EACH PREFIX ================= */
-//     for (const row of ggrData) {
-//       const prefix = row.prefix;
-//       let ggrAmount = row.ggr_12_percent;
-//       const totalLoss = row.total_loss_bets;
-
-//       // v02 → 10%
-//       if (prefix === "v02") {
-//         ggrAmount = Number((totalLoss * 0.1).toFixed(2));
-//       }
-
-//       if (ggrAmount <= 0) continue;
-
-//       const user = await User.findOne({ prefix });
-//       if (!user) continue;
-
-//       const balanceBefore = user.balance || 0;
-//       const duepayBefore = user.duepay || 0;
-
-//       const actualDeduction = Math.min(ggrAmount, balanceBefore);
-//       const remainingDue = Math.max(ggrAmount - actualDeduction, 0);
-
-//       const balanceAfter = balanceBefore - actualDeduction;
-
-//       if (actualDeduction <= 0 && remainingDue <= 0) continue;
-
-//       /* ================= UPDATE TODAY GGR ================= */
-//       const userGgrDate = user.ggrupdatedate
-//         ? moment(user.ggrupdatedate).format("YYYY-MM-DD")
-//         : null;
-
-//       if (userGgrDate !== todayDate) {
-//         user.todayggr = actualDeduction;
-//         user.ggrupdatedate = todayDate;
-//       } else {
-//         user.todayggr = (user.todayggr || 0) + actualDeduction;
-//       }
-
-//       /* ================= UPDATE USER BALANCE ================= */
-//       user.balance = Math.max(balanceAfter, 0);
-//       user.totalggr = (user.totalggr || 0) + actualDeduction;
-//       user.duepay = duepayBefore + remainingDue;
-
-//       await user.save();
-
-//       /* ================= GGR LOG ================= */
-//       await GGRLog.create({
-//         prefix,
-//         total_bets: totalLoss,
-//         total_wins: 0,
-//         total_loss: totalLoss,
-//         ggr: totalLoss,
-//         ggr_12_percent: ggrAmount,
-//         balance_deducted: actualDeduction,
-//         user_balance_before: balanceBefore,
-//         user_balance_after: balanceAfter,
-//         ggr_date: todayDate,
-//         duepay_added: remainingDue,
-//       });
-//     }
-
-//     /* ================= MARK TRANSACTIONS PROCESSED ================= */
-//     await GameTransaction.updateMany(
-//       {
-//         status: { $in: [0, 2] },
-//         ggrstatus: 0,
-//         isdaily: 0,
-//       },
-//       { $set: { ggrstatus: 1 } }
-//     );
-
-//   if (res) {
-//     return res.json({
-//       status: true,
-//       message: "Loss GGR processed and user balances updated.",
-//       details: ggrData,
-//     });
-// }
-
-//   } catch (error) {
-//     console.error("Loss GGR Error:", error);
-//     return res.status(500).json({
-//     status: false,
-//     message: "Server error",
-//   });
-//   }
-// };
-
-
-// handleBetLossGGR()
-
-// get bet history by fillter
-
-
 
 export const handleBetLossGGR = async (req = null, res = null) => {
-
-  console.log("Running Loss GGR cron");
 
   try {
 
@@ -1230,7 +1095,33 @@ export const handleBetLossGGR = async (req = null, res = null) => {
 
     /* ================= AGGREGATE LOSS ================= */
 
-    const ggrData = await GameTransaction.aggregate([
+    // const ggrData = await GameTransaction.aggregate([
+    //   {
+    //     $match: {
+    //       status: { $in: [0, 2] },
+    //       ggrstatus: 0,
+    //       isdaily: 0,
+    //       callback_time: { $lt: lessTime }
+    //     }
+    //   },
+    //   {
+    //     $group: {
+    //       _id: "$prefix",
+    //       total_loss_bets: { $sum: "$bet_amount" }
+    //     }
+    //   },
+    //   {
+    //     $project: {
+    //       prefix: "$_id",
+    //       total_loss_bets: 1,
+    //       ggr_12_percent: {
+    //         $round: [{ $multiply: ["$total_loss_bets", 0.12] }, 2]
+    //       }
+    //     }
+    //   }
+    // ]);
+
+      const ggrData = await GameTransaction.aggregate([
       {
         $match: {
           status: { $in: [0, 2] },
@@ -1245,17 +1136,44 @@ export const handleBetLossGGR = async (req = null, res = null) => {
           total_loss_bets: { $sum: "$bet_amount" }
         }
       },
+
+      /* ================= JOIN USER ================= */
+      {
+        $lookup: {
+          from: "users", // collection name (important)
+          localField: "_id",
+          foreignField: "prefix",
+          as: "user"
+        }
+      },
+      {
+        $unwind: "$user"
+      },
+
+      /* ================= CALCULATE DYNAMIC GGR ================= */
       {
         $project: {
           prefix: "$_id",
           total_loss_bets: 1,
-          ggr_12_percent: {
-            $round: [{ $multiply: ["$total_loss_bets", 0.12] }, 2]
+
+          ggr_percent: {
+            $divide: ["$user.ggr_coust", 100]
+          },
+
+          ggr_amount: {
+            $round: [
+              {
+                $multiply: [
+                  "$total_loss_bets",
+                  { $divide: ["$user.ggr_coust", 100] }
+                ]
+              },
+              2
+            ]
           }
         }
       }
     ]);
-
 
     /* ================= PROCESS PREFIX ================= */
 
