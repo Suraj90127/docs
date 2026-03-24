@@ -1195,11 +1195,12 @@ export const handleBetLossGGR = async (req = null, res = null) => {
       const prefix = row.prefix;
       const totalLoss = row.total_loss_bets;
 
-      let ggrAmount = row.ggr_12_percent;
+      // let ggrAmount = row.ggr_12_percent;
+      let ggrAmount = Number(row.ggr_amount || 0);
 
-      if (prefix === "v02") {
-        ggrAmount = Number((totalLoss * 0.10).toFixed(2));
-      }
+      // if (prefix === "v02") {
+      //   ggrAmount = Number((totalLoss * 0.10).toFixed(2));
+      // }
 
       if (ggrAmount <= 0) continue;
 
@@ -1241,7 +1242,7 @@ export const handleBetLossGGR = async (req = null, res = null) => {
 
       /* ================= USER UPDATE ================= */
 
-      user.balance = Math.max(balanceAfter, 0);
+      user.balance = Number(Math.max(balanceAfter, 0).toFixed(2));
       user.totalggr = Number(user.totalggr || 0) + actualDeduction;
       user.duepay = duepayBefore + remainingDue;
 
