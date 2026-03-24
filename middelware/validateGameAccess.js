@@ -170,7 +170,7 @@ export const lunchGameValidate = async (req, res, next) => {
     ================================ */
     const { key } = req.query;
 
-    console.log("key",key);
+    // console.log("key",key);
     
 
     if (!key) {

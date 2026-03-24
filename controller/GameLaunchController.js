@@ -18,10 +18,13 @@ import moment from "moment-timezone";
 
 
 export const getLunchGameDetails = async (req, res) => {
-  console.log("kjhgghghg");
+  // console.log("kjhgghghg");
   
   const { allowedProviders } = req;
   console.log("allowedProviders",allowedProviders);
+
+  console.log("req.query",req.query);
+  
   
   try {
     const { provider_list, gametype_list, provider, game_type, size, page } = req.query;
@@ -498,8 +501,8 @@ export const getUserBalanceLocal = async (req, res) => {
 
     const allowedIpv4 =
       (user.ipv4_address || []).map(ip => ip.trim());
-    const allowedIpv6 =
-      user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
+    // const allowedIpv6 =
+    //   user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
 
     let ipAllowed = false;
 
@@ -511,18 +514,18 @@ export const getUserBalanceLocal = async (req, res) => {
         .slice(0, 4)
         .join(":");
 
-      for (const ipv6 of allowedIpv6) {
-        if (
-          ipv6
-            .toLowerCase()
-            .split(":")
-            .slice(0, 4)
-            .join(":") === reqPrefix
-        ) {
-          ipAllowed = true;
-          break;
-        }
-      }
+      // for (const ipv6 of allowedIpv6) {
+      //   if (
+      //     ipv6
+      //       .toLowerCase()
+      //       .split(":")
+      //       .slice(0, 4)
+      //       .join(":") === reqPrefix
+      //   ) {
+      //     ipAllowed = true;
+      //     break;
+      //   }
+      // }
     } 
     // IPv4 check
     else {
@@ -602,8 +605,8 @@ export const setUserBalanceLocal = async (req, res) => {
 
     const allowedIpv4 =
       (user.ipv4_address || []).map(ip => ip.trim());
-    const allowedIpv6 =
-      user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
+    // const allowedIpv6 =
+    //   user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
 
     let ipAllowed = false;
 
@@ -615,18 +618,18 @@ export const setUserBalanceLocal = async (req, res) => {
         .slice(0, 4)
         .join(":");
 
-      for (const ipv6 of allowedIpv6) {
-        if (
-          ipv6
-            .toLowerCase()
-            .split(":")
-            .slice(0, 4)
-            .join(":") === reqPrefix
-        ) {
-          ipAllowed = true;
-          break;
-        }
-      }
+      // for (const ipv6 of allowedIpv6) {
+      //   if (
+      //     ipv6
+      //       .toLowerCase()
+      //       .split(":")
+      //       .slice(0, 4)
+      //       .join(":") === reqPrefix
+      //   ) {
+      //     ipAllowed = true;
+      //     break;
+      //   }
+      // }
     }
     // IPv4 exact match
     else {
@@ -711,9 +714,16 @@ export const setUserBalanceLocal = async (req, res) => {
 
 // get bet hitory 
 export const getBetHistory = async (req, res) => {
+  // console.log("req.body",req.body);
+  
   try {
     /* ================= VALIDATION ================= */
     const { key, playerid, page = 1, limit = 20, from_date, to_date } = req.body;
+
+    const cleanPlayerId = String(playerid).slice(-7);
+
+    // console.log("cleanPlayerId",cleanPlayerId);
+    
 
     if (!key) {
       return res.status(422).json({
@@ -741,7 +751,7 @@ export const getBetHistory = async (req, res) => {
     };
 
     if (playerid) {
-      query.player = playerid;
+      query.player = cleanPlayerId;
     }
 
     if (from_date || to_date) {
@@ -785,6 +795,9 @@ export const getBetHistory = async (req, res) => {
       provider: gameMap[r.game_uid]?.provider || null,
       icon: gameMap[r.game_uid]?.icon || null,
     }));
+
+    // console.log("finalData",finalData);
+    
 
     /* ================= RESPONSE ================= */
     return res.json({
@@ -831,7 +844,7 @@ export const handleSeamlessCallback = async (req, res) => {
 
     const decrypted = aesDecrypt(encryptedPayload, aes_key);
 
-    console.log("decrypted callback",decrypted);
+    // console.log("decrypted callback",decrypted);
     
     const data = JSON.parse(decrypted || "{}");
 
@@ -1475,8 +1488,8 @@ export const setBalance = async (req, res) => {
       req.socket.remoteAddress;
 
     const allowedIpv4 =(user.ipv4_address || []).map(ip => ip.trim());
-    const allowedIpv6 =
-      user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
+    // const allowedIpv6 =
+    //   user.ipv6_address?.split(",").map(ip => ip.trim()) || [];
 
     let ipAllowed = false;
 
@@ -1488,18 +1501,18 @@ export const setBalance = async (req, res) => {
         .slice(0, 4)
         .join(":");
 
-      for (const ipv6 of allowedIpv6) {
-        const allowedPrefix = ipv6
-          .toLowerCase()
-          .split(":")
-          .slice(0, 4)
-          .join(":");
+      // for (const ipv6 of allowedIpv6) {
+      //   const allowedPrefix = ipv6
+      //     .toLowerCase()
+      //     .split(":")
+      //     .slice(0, 4)
+      //     .join(":");
 
-        if (allowedPrefix === reqPrefix) {
-          ipAllowed = true;
-          break;
-        }
-      }
+      //   if (allowedPrefix === reqPrefix) {
+      //     ipAllowed = true;
+      //     break;
+      //   }
+      // }
     } 
     // IPv4 exact match
     else {
@@ -1514,7 +1527,7 @@ export const setBalance = async (req, res) => {
         message: "Unauthorized request origin.",
         your_ip: requestIp,
         allowedIpv4List: allowedIpv4,
-        allowedIpv6List: allowedIpv6,
+        // allowedIpv6List: allowedIpv6,
       });
     }
 

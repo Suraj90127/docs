@@ -15,9 +15,9 @@ export const validateUser = async (req, res, next) => {
   const requestIp = req.ip;
 
   const ipv4 = user.ipv4_address?.split(",") || [];
-  const ipv6 = user.ipv6_address?.split(",") || [];
+  // const ipv6 = user.ipv6_address?.split(",") || [];
 
-  if (!isIpAllowed(requestIp, ipv4, ipv6)) {
+  if (!isIpAllowed(requestIp, ipv4)) {
     return res.status(403).json({
       status: false,
       message: "Unauthorized IP",
