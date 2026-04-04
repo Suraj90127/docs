@@ -1,18 +1,6 @@
 // import axios from "axios";
 
 
-// // const API_BASE_URL = "/api";
-
-// export const api = axios.create({
-//   baseURL: API_BASE_URL,
-//   withCredentials: true, // future cookie auth ke liye
-  
-//   // headers: {
-//   //   "Content-Type": "application/json",
-//   // },
-// });
-
-
 
 /// src/reducer/api.js
 import axios from "axios";
@@ -29,10 +17,11 @@ export const api = axios.create({
   }
 });
 
-// Request interceptor to add headers
+
+// // const AP// Request interceptor to add headers
 api.interceptors.request.use((config) => {
   // Add domain header
-  config.headers['x-domain'] = window.location.hostname || 'api-docs.space';
+  config.headers['x-domain'] = window.location.hostname;
   // config.headers['x-domain'] = 'api-docs.space';
   
   // Add internal request header to bypass IP validation for docs
@@ -51,3 +40,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
+

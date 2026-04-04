@@ -1088,8 +1088,6 @@ export const processSingleGGR = async (
 };
 
 
-
-
 export const handleBetLossGGR = async (req = null, res = null) => {
 
   try {
@@ -1105,34 +1103,7 @@ export const handleBetLossGGR = async (req = null, res = null) => {
       .tz("Asia/Kolkata")
       .format("YYYY-MM-DD");
 
-
     /* ================= AGGREGATE LOSS ================= */
-
-    // const ggrData = await GameTransaction.aggregate([
-    //   {
-    //     $match: {
-    //       status: { $in: [0, 2] },
-    //       ggrstatus: 0,
-    //       isdaily: 0,
-    //       callback_time: { $lt: lessTime }
-    //     }
-    //   },
-    //   {
-    //     $group: {
-    //       _id: "$prefix",
-    //       total_loss_bets: { $sum: "$bet_amount" }
-    //     }
-    //   },
-    //   {
-    //     $project: {
-    //       prefix: "$_id",
-    //       total_loss_bets: 1,
-    //       ggr_12_percent: {
-    //         $round: [{ $multiply: ["$total_loss_bets", 0.12] }, 2]
-    //       }
-    //     }
-    //   }
-    // ]);
 
       const ggrData = await GameTransaction.aggregate([
       {
@@ -1278,7 +1249,8 @@ export const handleBetLossGGR = async (req = null, res = null) => {
         callback_time: { $lt: lessTime }
       },
       {
-        $set: { ggrstatus: 1 }
+        $set: { ggrstatus: 1 },
+        // $set: { status: 1 }
       }
     );
 
@@ -1309,6 +1281,33 @@ export const handleBetLossGGR = async (req = null, res = null) => {
   }
 
 };
+
+export const updatePendingBetStus = async (req=null, res=null) => {
+   try {
+    console.log("⏳ Running cron for pending bets...");
+
+    const threeMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+
+    const result = await GameTransaction.updateMany(
+      {
+        status: 0,
+        createdAt: { $lte: threeMinutesAgo }
+      },
+      {
+        $set: { status: 2 }
+      }
+    );
+
+    console.log("result",result);
+    
+
+    console.log(`✅ Updated ${result.modifiedCount} records`);
+  } catch (error) {
+    console.error("❌ Cron error:", error.message);
+  }
+}
+
+// updatePendingBetStus();
 
 export const getBetHistoryFilter = async (req, res) => {
   try {

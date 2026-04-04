@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { handleBetLossGGR } from "./GameLaunchController.js";
+import { handleBetLossGGR, updatePendingBetStus } from "./GameLaunchController.js";
 
 export const cronJobGame1p = () => {
 
@@ -13,6 +13,7 @@ export const cronJobGame1p = () => {
     //   console.log("hello suraj sir");
 
       await handleBetLossGGR();
+      await updatePendingBetStus();
 
     } catch (error) {
 
